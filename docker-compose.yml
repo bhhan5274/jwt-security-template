@@ -1,0 +1,73 @@
+version: "3.1"
+services:
+
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/conf.d:/etc/mysql/conf.d
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+    env_file: ./mysql/.env
+    environment:
+      TZ: Asia/Seoul
+    restart: always
+
+  pinpoint:
+    image: bhhan87/pinpoint
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "9991:9991"
+      - "9992:9992"
+      - "9993:9993"
+    volumes:
+      - ./pinpoint/hbase:/home/pinpoint/hbase-data
+    restart: always
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus-config/:/etc/prometheus/
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+
+  prometheus-eureka-server:
+    image: bhhan87/prometheus-eureka-server
+    depends_on:
+      - prometheus
+    ports:
+      - "8761:8761"
+
+  jwt-server:
+    build:
+      context: ./jwt_server
+    image: bhhan87/jwt-server
+    ports:
+      - "8082:8080"
+    environment:
+      - EUREKA_SERVICE_URI=http://prometheus-eureka-server:8761/eureka
+      - MYSQL_URL=jdbc:mysql://mysql/bhhan?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      - MYSQL_USERNAME=root
+      - MYSQL_PASSWORD=1234
+      - PINPOINT_COLLECTOR_IP=pinpoint
+      - PINPOINT_APPLICATION_NAME=jwt_server
+      - PINPOINT_AGENT_ID=jwt_server
+      - PROFILER_TRANSPORT_GRPC_COLLECTOR_IP=pinpoint
+      - PROFILER_SAMPLING_RATE=1
+    depends_on:
+      - mysql

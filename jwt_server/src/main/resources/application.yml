@@ -1,0 +1,45 @@
+spring:
+  cloud:
+    compatibility-verifier:
+      enabled: false
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/bhhan?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:1234}
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database: mysql
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+server:
+  port: 8080
+
+application:
+  security:
+    admin:
+      email: admin@email.com
+      firstname: John
+      lastname: Doe
+      role: ADMIN
+      password: admin
+    jwt:
+      secret-key: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      expiration: ${JWT_TOKEN_EXPIRATION:60000} # a day {86400000}
+      refresh-token:
+        expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:120000} # 7 days {604800000}

@@ -1,0 +1,86 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
+        classpath "com.avast.gradle:gradle-docker-compose-plugin:$dockerComposePluginVersion"
+    }
+}
+
+apply plugin: 'docker-compose'
+
+subprojects {
+    apply plugin: "java"
+    sourceCompatibility = 11
+    targetCompatibility = 11
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+
+        dependencies {
+            compileOnly "org.projectlombok:lombok:$lombokVersion"
+            annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        }
+    }
+}
+
+dockerCompose {
+    removeOrphans = true
+    retainContainersOnStartupFailure = true
+    dockerComposeStopTimeout = java.time.Duration.ofSeconds(1)
+
+    mysql {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["mysql"]
+    }
+
+    pinpoint {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["pinpoint"]
+    }
+
+    prometheus {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["prometheus"]
+    }
+
+    application {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["jwt-server"]
+    }
+
+    eureka {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["prometheus-eureka-server"]
+    }
+
+    grafana {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["grafana"]
+    }
+
+    infra {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["prometheus", "grafana", "prometheus-eureka-server", "mysql", "pinpoint"]
+    }
+}
+
+subprojects.each {
+    if(it.name.startsWith("jwt")) {
+        applicationComposeUp.dependsOn(":" + it.name + ":assemble")
+    }
+}
+
+applicationComposeUp.dependsOn(infraComposeUp)
+applicationComposeDown.dependsOn(infraComposeDown)

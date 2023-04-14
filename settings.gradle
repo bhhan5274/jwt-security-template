@@ -1,0 +1,3 @@
+rootProject.name = 'jwt_security_architecture'
+include 'jwt_server'
+
