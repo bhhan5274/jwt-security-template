@@ -1,3 +1,5 @@
+import java.time.Duration
+
 buildscript {
     repositories {
         mavenCentral()
@@ -31,7 +33,7 @@ subprojects {
 dockerCompose {
     removeOrphans = true
     retainContainersOnStartupFailure = true
-    dockerComposeStopTimeout = java.time.Duration.ofSeconds(1)
+    dockerComposeStopTimeout = Duration.ofSeconds(1)
 
     mysql {
         projectName = null
@@ -57,6 +59,12 @@ dockerCompose {
         startedServices = ["jwt-server"]
     }
 
+    server {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["jwt-server"]
+    }
+
     eureka {
         projectName = null
         useComposeFiles = ["docker-compose.yml"]
@@ -69,6 +77,12 @@ dockerCompose {
         startedServices = ["grafana"]
     }
 
+    ngrinder {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        startedServices = ["controller", "agent1", "agent2", "agent3"]
+    }
+
     infra {
         projectName = null
         useComposeFiles = ["docker-compose.yml"]
@@ -79,6 +93,7 @@ dockerCompose {
 subprojects.each {
     if(it.name.startsWith("jwt")) {
         applicationComposeUp.dependsOn(":" + it.name + ":assemble")
+        serverComposeUp.dependsOn(":" + it.name + ":assemble")
     }
 }
 

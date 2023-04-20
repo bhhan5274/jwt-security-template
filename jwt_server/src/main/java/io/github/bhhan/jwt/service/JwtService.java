@@ -68,6 +68,9 @@ public class JwtService {
             UserDetails userDetails,
             Long expiration
     ){
+        //부하테스트: 동시에 토큰 요청 시 같은 값이 나오는 것을 방지
+        extraClaims.put("timestamp", System.nanoTime());
+
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())

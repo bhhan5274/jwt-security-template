@@ -11,7 +11,6 @@ services:
     env_file: ./mysql/.env
     environment:
       TZ: Asia/Seoul
-    restart: always
 
   pinpoint:
     image: bhhan87/pinpoint
@@ -23,7 +22,6 @@ services:
       - "9993:9993"
     volumes:
       - ./pinpoint/hbase:/home/pinpoint/hbase-data
-    restart: always
 
   prometheus:
     image: prom/prometheus
@@ -66,8 +64,34 @@ services:
       - MYSQL_PASSWORD=1234
       - PINPOINT_COLLECTOR_IP=pinpoint
       - PINPOINT_APPLICATION_NAME=jwt_server
-      - PINPOINT_AGENT_ID=jwt_server
+      - PINPOINT_AGENT_ID=jwt_server_2
       - PROFILER_TRANSPORT_GRPC_COLLECTOR_IP=pinpoint
-      - PROFILER_SAMPLING_RATE=1
+      - PROFILER_SAMPLING_RATE=10
     depends_on:
       - mysql
+      - prometheus-eureka-server
+      - pinpoint
+
+  controller:
+    image: ngrinder/controller:3.5.8
+    ports:
+      - "9000:80"
+      - "16001:16001"
+      - "12000-12009:12000-12009"
+    volumes:
+      - ./ngrinder-controller:/opt/ngrinder-controller
+
+  agent1:
+    image: ngrinder/agent:3.5.8
+    links:
+      - controller
+
+  agent2:
+    image: ngrinder/agent:3.5.8
+    links:
+      - controller
+
+  agent3:
+    image: ngrinder/agent:3.5.8
+    links:
+      - controller

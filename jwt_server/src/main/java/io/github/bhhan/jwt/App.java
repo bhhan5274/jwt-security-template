@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Import;
 @Import({
         ApplicationConfig.class,
         SecurityConfig.class,
+        DataSourceConfig.class
 })
 public class App {
     private final UserService userService;
